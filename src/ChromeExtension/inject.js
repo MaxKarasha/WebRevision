@@ -1,3 +1,11 @@
+function getZip() {
+  return new JSZip();
+}
+
+function addSimpleFileToZip(fileName, data, zip) {
+  zip.file(fileName, data)
+}
+
 function getElementFromEvent(e) {
   var e = e || window.event;
   return e.srcElement || e.target;
@@ -18,11 +26,23 @@ function setRevisionStyle(elem) {
 }
 
 var elClicklistener = function addRecension(e) {
+  setEnableBodyListeners(false);
   var elem = getElementFromEvent(e);
-  makeCapture(getTSGroupEl(elem), function() {
+  var zip = getZip();
+  var tsElem = getTSGroupEl(elem);
+  addCaptureToZip(tsElem, zip, function() {
     var elem = getElementFromEvent(e);  
     stopAction(elem);
     var comment = prompt("Add comment", '');
+    addSimpleFileToZip("comment.txt", comment, zip);
+    addSimpleFileToZip("element.dat", elem.outerHTML, zip);
+    if (elem != tsElem) {
+      addSimpleFileToZip("groupElements.dat", tsElem.outerHTML, zip);
+    }
+    zip.generateAsync({type:"blob"})
+      .then(function(content) {
+          saveAs(content, "revision.zip");
+      });
   });  
 }
 
@@ -39,8 +59,6 @@ var mouseOutListener = function mouseOut(e) {
   clearRevisionStyle(elem);
   setElemClickListener(elem, false);
 }
-
-
 
 function setElemClickListener(elem, enable) {
   enable ?
@@ -63,30 +81,21 @@ function stopAction(elem) {
   setEnableBodyListeners(false);
 }
 
-function makeCapture(elem, callback) {
+function saveCapture(elem, callback) {
   html2canvas(elem || document.body).then(canvas => {
-    saveAs(canvas.toDataURL(), 'canvas.png');
+    saveAs(canvas.toDataURL(), 'screenshot.png');
     callback();
   });
 }
 
-function saveAs(uri, filename) {
-  var link = document.createElement('a');
-  if (typeof link.download === 'string') {
-      link.href = uri;
-      link.download = filename;
-
-      //Firefox requires the link to be in the body
-      document.body.appendChild(link);
-
-      //simulate click
-      link.click();
-
-      //remove the link when done
-      document.body.removeChild(link);
-  } else {
-      window.open(uri);
-  }
+function addCaptureToZip(elem, zip, callback) {
+  html2canvas(elem || document.body).then(canvas => {
+    canvas.toBlob(function(blob) {
+        zip.file("screenshot.png", blob, {base64: true});
+        callback();
+    });
+  });
+  
 }
 
 setEnableBodyListeners(true);

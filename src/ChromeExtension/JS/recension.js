@@ -1,11 +1,15 @@
 document.addEventListener('DOMContentLoaded', function() {
     var makeRecensionButton = document.getElementById('MakeRecension');
     makeRecensionButton.addEventListener('click', function() {	
-        chrome.tabs.getSelected(null, function(tab) {
-            chrome.tabs.executeScript(tab.id, {file: "js/html2canvas.min.js"}, function(response) {
-			    chrome.tabs.executeScript(tab.id, {file: "captureUtils.js"}, function(response) {				
-                    chrome.tabs.executeScript(tab.id, {file: "inject.js"}, function(response) {				
-                        window.close();
+        chrome.tabs.getSelected(null, function(tab) {                       
+            chrome.tabs.executeScript(tab.id, {file: "js/FileSaver.min.js"}, function(response) {
+                chrome.tabs.executeScript(tab.id, {file: "js/canvas-toBlob.js"}, function(response) {
+                    chrome.tabs.executeScript(tab.id, {file: "js/html2canvas.min.js"}, function(response) {
+                        chrome.tabs.executeScript(tab.id, {file: "js/jszip.min.js"}, function(response) {
+                            chrome.tabs.executeScript(tab.id, {file: "inject.js"}, function(response) {				
+                                window.close();
+                            });
+                        });
                     });
                 });
 			});
