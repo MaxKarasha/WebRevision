@@ -3,6 +3,12 @@ function getElementFromEvent(e) {
   return e.srcElement || e.target;
 }
 
+function getTSGroupEl(elem) {
+  return elem.closest('.ts-controlgroup') || 
+    elem.closest('.grid-layout') ||
+    elem;
+}
+
 function clearRevisionStyle(elem) {
   elem.style.border="";
 }
@@ -12,23 +18,29 @@ function setRevisionStyle(elem) {
 }
 
 var elClicklistener = function addRecension(e) {
-  makeCapture(function() {
+  var elem = getElementFromEvent(e);
+  makeCapture(getTSGroupEl(elem), function() {
     var elem = getElementFromEvent(e);  
     stopAction(elem);
     var comment = prompt("Add comment", '');
   });  
 }
 
-var mouseOverListener = function over(e) {  
+var mouseOverListener = function mouseOver(e) {  
   var elem = getElementFromEvent(e);
-  var relatedTarget = e.relatedTarget || e.fromElement;
-  clearRevisionStyle(relatedTarget);
-  setElemClickListener(relatedTarget, false);
   if (elem.tagName != 'BODY') {
     setRevisionStyle(elem);    
     setElemClickListener(elem, true);
   }
 }
+
+var mouseOutListener = function mouseOut(e) {  
+  var elem = getElementFromEvent(e);
+  clearRevisionStyle(elem);
+  setElemClickListener(elem, false);
+}
+
+
 
 function setElemClickListener(elem, enable) {
   enable ?
@@ -40,6 +52,9 @@ function setEnableBodyListeners(enable){
   enable ?
     document.body.addEventListener("mouseover", mouseOverListener) :
     document.body.removeEventListener("mouseover", mouseOverListener);
+  enable ?
+    document.body.addEventListener("mouseout", mouseOutListener) :
+    document.body.removeEventListener("mouseout", mouseOutListener);
 }
 
 function stopAction(elem) {
@@ -48,8 +63,8 @@ function stopAction(elem) {
   setEnableBodyListeners(false);
 }
 
-function makeCapture(callback) {
-  html2canvas(document.body).then(canvas => {
+function makeCapture(elem, callback) {
+  html2canvas(elem || document.body).then(canvas => {
     saveAs(canvas.toDataURL(), 'canvas.png');
     callback();
   });
